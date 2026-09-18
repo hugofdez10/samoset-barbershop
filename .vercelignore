@@ -1,0 +1,7 @@
+IMG_3394.MOV
+*.MOV
+*.mov
+.tmp-video-review
+node_modules
+.next
+*.tsbuildinfo

@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+*.tsbuildinfo
+
+.env
+.env*.local
+
+.vercel
+
+*.MOV
+*.mov
+.tmp-video-review
