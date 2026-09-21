@@ -1,5 +1,12 @@
 -- SAMOSET BARBERSHOP DATABASE
--- Run this complete file in Supabase > SQL Editor.
+-- Run this complete file in Supabase > SQL Editor. It is safe to run again.
+--
+-- Only users with app_metadata.role = 'admin' can see or manage bookings.
+-- Give your own account that role (then sign out and sign in again):
+--
+--   update auth.users
+--   set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role": "admin"}'
+--   where email = 'YOUR_ADMIN_EMAIL';
 
 create extension if not exists pgcrypto;
 
@@ -39,31 +46,33 @@ create index if not exists bookings_status_date_idx
 
 alter table public.bookings enable row level security;
 
+-- Bookings now arrive through WhatsApp, so the public cannot write here anymore.
 drop policy if exists "Public can request bookings" on public.bookings;
-create policy "Public can request bookings"
-  on public.bookings
-  for insert
-  to anon
-  with check (status = 'pending');
+revoke all on public.bookings from anon;
 
+-- Earlier versions let any signed-in user manage bookings.
 drop policy if exists "Authenticated admin can view bookings" on public.bookings;
-create policy "Authenticated admin can view bookings"
+drop policy if exists "Authenticated admin can update bookings" on public.bookings;
+drop policy if exists "Authenticated admin can delete bookings" on public.bookings;
+
+drop policy if exists "Admin can view bookings" on public.bookings;
+create policy "Admin can view bookings"
   on public.bookings
   for select
   to authenticated
-  using (true);
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
-drop policy if exists "Authenticated admin can update bookings" on public.bookings;
-create policy "Authenticated admin can update bookings"
+drop policy if exists "Admin can update bookings" on public.bookings;
+create policy "Admin can update bookings"
   on public.bookings
   for update
   to authenticated
-  using (true)
-  with check (true);
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+  with check ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
-drop policy if exists "Authenticated admin can delete bookings" on public.bookings;
-create policy "Authenticated admin can delete bookings"
+drop policy if exists "Admin can delete bookings" on public.bookings;
+create policy "Admin can delete bookings"
   on public.bookings
   for delete
   to authenticated
-  using (true);
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');

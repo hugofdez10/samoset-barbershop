@@ -4,6 +4,7 @@ import { CalendarCheck2, ClockAlert, LogOut, Scissors, XCircle } from "lucide-re
 import { redirect } from "next/navigation";
 import { BookingCard } from "@/components/BookingCard";
 import { signOut } from "./actions";
+import { isAdmin } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Booking } from "@/lib/types";
 
@@ -17,6 +18,10 @@ export default async function AdminPage() {
 
   if (!user) {
     redirect("/admin/login");
+  }
+
+  if (!isAdmin(user)) {
+    return <NoAccess />;
   }
 
   const { data, error } = await supabase
@@ -87,6 +92,25 @@ export default async function AdminPage() {
         <BookingSection title="Accepted appointments" bookings={accepted} empty="No accepted appointments." />
         <BookingSection title="Rejected requests" bookings={rejected} empty="No rejected requests." />
       </div>
+    </main>
+  );
+}
+
+function NoAccess() {
+  return (
+    <main className="grid min-h-screen place-items-center px-5 py-12">
+      <section className="w-full max-w-md rounded-[2rem] border border-white/10 bg-[#111] p-7 text-center shadow-vintage sm:p-9">
+        <h1 className="font-serif text-3xl font-black text-[#f0e6cf]">No access</h1>
+        <p className="mt-3 text-sm leading-6 text-white/45">
+          This account is not allowed to manage bookings.
+        </p>
+        <form action={signOut} className="mt-6">
+          <button className="inline-flex items-center gap-2 rounded-xl bg-[#b62425] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#d12d2e]">
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </button>
+        </form>
+      </section>
     </main>
   );
 }

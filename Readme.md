@@ -31,6 +31,11 @@ npm run build
 La página pública no necesita variables de entorno. Para usar el panel opcional
 de Supabase, copia `.env.example` a `.env.local` y añade las dos claves indicadas.
 
+Solo pueden entrar al panel las cuentas con `app_metadata.role = 'admin'`. Ejecuta
+`supabase/schema.sql` en el SQL Editor y asigna ese rol a tu cuenta con la consulta
+que aparece al principio del archivo. Desactiva también los registros nuevos en
+Supabase → Authentication → Sign In / Providers.
+
 ## Publicar
 
 Puedes subir el proyecto a GitHub e importarlo en Vercel. El comando de build es

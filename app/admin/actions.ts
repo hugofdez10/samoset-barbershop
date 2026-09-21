@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isAdmin } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { BookingStatus } from "@/lib/types";
 
-async function authenticatedClient() {
+async function adminClient() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,6 +14,10 @@ async function authenticatedClient() {
 
   if (!user) {
     redirect("/admin/login");
+  }
+
+  if (!isAdmin(user)) {
+    redirect("/admin");
   }
 
   return supabase;
@@ -26,7 +31,7 @@ export async function setBookingStatus(formData: FormData) {
     return;
   }
 
-  const supabase = await authenticatedClient();
+  const supabase = await adminClient();
   const { error } = await supabase
     .from("bookings")
     .update({ status })
@@ -44,7 +49,7 @@ export async function deleteBooking(formData: FormData) {
   const id = String(formData.get("id") || "");
   if (!id) return;
 
-  const supabase = await authenticatedClient();
+  const supabase = await adminClient();
   const { error } = await supabase.from("bookings").delete().eq("id", id);
 
   if (error) {
